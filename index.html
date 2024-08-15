@@ -15,11 +15,18 @@
             margin: 0;
             background-color: #f4f4f4;
         }
+        #upload-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        #upload-container input {
+            margin-top: 10px;
+        }
         #flashcards-container {
             display: none;
-            margin-top: 20px;
             width: 80%;
             max-width: 600px;
+            text-align: center;
         }
         .flashcard {
             border: 1px solid #ccc;
@@ -27,7 +34,8 @@
             padding: 20px;
             background-color: #fff;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            text-align: center;
+            position: relative;
+            margin-bottom: 20px;
         }
         .flashcard .answer {
             display: none;
@@ -37,8 +45,12 @@
         .flashcard.show-answer .answer {
             display: block;
         }
-        .flashcard button {
-            margin-top: 10px;
+        #controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        #controls button {
             padding: 10px 20px;
             font-size: 16px;
             cursor: pointer;
@@ -49,15 +61,6 @@
             width: 80%;
             max-width: 300px;
             font-size: 16px;
-        }
-        .flashcard p {
-            margin: 0;
-        }
-        #controls {
-            margin-top: 20px;
-        }
-        #controls button {
-            margin: 0 10px;
         }
     </style>
 </head>
