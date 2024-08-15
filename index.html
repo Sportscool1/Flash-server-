@@ -15,6 +15,16 @@
             margin: 0;
             background-color: #f4f4f4;
         }
+        #dropArea {
+            border: 2px dashed #007bff;
+            border-radius: 10px;
+            padding: 20px;
+            width: 80%;
+            max-width: 600px;
+            text-align: center;
+            background-color: #ffffff;
+            cursor: pointer;
+        }
         #flashcards {
             display: none;
             margin-top: 20px;
@@ -30,30 +40,67 @@
         .card p {
             margin: 0;
         }
+        .highlight {
+            border-color: #0056b3;
+        }
     </style>
 </head>
 <body>
     <h1>Flashcard Generator from PDF</h1>
-    <input type="file" id="fileInput" accept=".pdf">
+    <div id="dropArea">Drag & Drop PDF here or Click to Upload</div>
     <div id="flashcards"></div>
 
     <!-- Include PDF.js library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <script>
-        document.getElementById('fileInput').addEventListener('change', handleFileSelect);
+        const dropArea = document.getElementById('dropArea');
 
-        function handleFileSelect(event) {
-            const file = event.target.files[0];
+        // Handle drag events
+        dropArea.addEventListener('dragover', (event) => {
+            event.preventDefault();
+            dropArea.classList.add('highlight');
+        });
+
+        dropArea.addEventListener('dragleave', () => {
+            dropArea.classList.remove('highlight');
+        });
+
+        dropArea.addEventListener('drop', (event) => {
+            event.preventDefault();
+            dropArea.classList.remove('highlight');
+            const file = event.dataTransfer.files[0];
             if (file && file.type === 'application/pdf') {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const arrayBuffer = e.target.result;
-                    extractTextFromPDF(arrayBuffer);
-                };
-                reader.readAsArrayBuffer(file);
+                handleFile(file);
             } else {
-                alert('Please upload a PDF file.');
+                alert('Please drop a PDF file.');
             }
+        });
+
+        // Handle click event to trigger file input
+        dropArea.addEventListener('click', () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.pdf';
+            input.style.display = 'none';
+            document.body.appendChild(input);
+            input.addEventListener('change', () => {
+                const file = input.files[0];
+                if (file && file.type === 'application/pdf') {
+                    handleFile(file);
+                } else {
+                    alert('Please upload a PDF file.');
+                }
+            });
+            input.click();
+        });
+
+        function handleFile(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const arrayBuffer = e.target.result;
+                extractTextFromPDF(arrayBuffer);
+            };
+            reader.readAsArrayBuffer(file);
         }
 
         async function extractTextFromPDF(arrayBuffer) {
