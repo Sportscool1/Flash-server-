@@ -15,15 +15,7 @@
             margin: 0;
             background-color: #f4f4f4;
         }
-        #upload-container {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        #upload-container input {
-            margin-top: 10px;
-        }
         #flashcards-container {
-            display: none;
             width: 80%;
             max-width: 600px;
             text-align: center;
@@ -66,16 +58,12 @@
 </head>
 <body>
     <h1>Flashcard App</h1>
-    <div id="upload-container">
-        <input type="file" id="fileInput" accept=".txt">
-        <p>Upload a text file with flashcards (format: Question: Answer per line)</p>
-    </div>
     <div id="flashcards-container">
         <div class="flashcard">
-            <div class="question"></div>
+            <div class="question">Question 1: What is the capital of France?</div>
             <input type="text" id="userAnswer" placeholder="Type your answer here">
             <button id="checkAnswerButton">Check Answer</button>
-            <div class="answer"></div>
+            <div class="answer">Paris</div>
         </div>
         <div id="controls">
             <button id="prevButton">Previous</button>
@@ -84,40 +72,12 @@
     </div>
 
     <script>
-        let flashcards = [];
+        const flashcards = [
+            { question: "What is the capital of France?", answer: "Paris" },
+            { question: "What is the largest planet in our solar system?", answer: "Jupiter" },
+            { question: "What is the chemical symbol for gold?", answer: "Au" }
+        ];
         let currentIndex = 0;
-
-        document.getElementById('fileInput').addEventListener('change', handleFileSelect);
-
-        function handleFileSelect(event) {
-            const file = event.target.files[0];
-            if (file && file.type === 'text/plain') {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const text = e.target.result;
-                    parseFlashcards(text);
-                };
-                reader.readAsText(file);
-            } else {
-                alert('Please upload a text file.');
-            }
-        }
-
-        function parseFlashcards(text) {
-            const lines = text.split('\n').filter(line => line.trim() !== '');
-            flashcards = lines.map(line => {
-                const [question, answer] = line.split(':');
-                if (question && answer) {
-                    return { question: question.trim(), answer: answer.trim() };
-                } else {
-                    console.warn(`Skipping malformed line: "${line}"`);
-                    return null;
-                }
-            }).filter(card => card !== null);
-            currentIndex = 0;
-            displayFlashcard();
-            document.getElementById('flashcards-container').style.display = 'block';
-        }
 
         function displayFlashcard() {
             if (flashcards.length === 0) {
@@ -154,6 +114,9 @@
             currentIndex = (currentIndex - 1 + flashcards.length) % flashcards.length;
             displayFlashcard();
         });
+
+        // Initial display of the first flashcard
+        displayFlashcard();
     </script>
 </body>
 </html>
