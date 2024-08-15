@@ -107,8 +107,13 @@
             const lines = text.split('\n').filter(line => line.trim() !== '');
             flashcards = lines.map(line => {
                 const [question, answer] = line.split(':');
-                return { question: question.trim(), answer: answer.trim() };
-            });
+                if (question && answer) {
+                    return { question: question.trim(), answer: answer.trim() };
+                } else {
+                    console.warn(`Skipping malformed line: "${line}"`);
+                    return null;
+                }
+            }).filter(card => card !== null);
             currentIndex = 0;
             displayFlashcard();
             document.getElementById('flashcards-container').style.display = 'block';
