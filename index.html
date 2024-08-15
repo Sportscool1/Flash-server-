@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flashcard Generator from PDF</title>
+    <title>Flashcard App</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -15,182 +15,137 @@
             margin: 0;
             background-color: #f4f4f4;
         }
-        #dropArea {
-            border: 2px dashed #007bff;
-            border-radius: 10px;
-            padding: 20px;
-            width: 80%;
-            max-width: 600px;
-            text-align: center;
-            background-color: #ffffff;
-            cursor: pointer;
-        }
-        #flashcards {
+        #flashcards-container {
             display: none;
             margin-top: 20px;
+            width: 80%;
+            max-width: 600px;
         }
-        .card {
+        .flashcard {
             border: 1px solid #ccc;
-            border-radius: 5px;
+            border-radius: 10px;
             padding: 20px;
-            margin: 10px;
             background-color: #fff;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             text-align: center;
         }
-        .card .answer {
+        .flashcard .answer {
             display: none;
             margin-top: 10px;
             font-style: italic;
         }
-        .card.show-answer .answer {
+        .flashcard.show-answer .answer {
             display: block;
         }
-        .highlight {
-            border-color: #0056b3;
+        .flashcard button {
+            margin-top: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
         }
-        input[type="text"] {
+        .flashcard input[type="text"] {
             padding: 5px;
             margin-top: 10px;
             width: 80%;
             max-width: 300px;
             font-size: 16px;
         }
-        button {
-            margin-top: 10px;
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
+        .flashcard p {
+            margin: 0;
+        }
+        #controls {
+            margin-top: 20px;
+        }
+        #controls button {
+            margin: 0 10px;
         }
     </style>
 </head>
 <body>
-    <h1>Flashcard Generator from PDF</h1>
-    <div id="dropArea">Drag & Drop PDF here or Click to Upload</div>
-    <div id="flashcards"></div>
+    <h1>Flashcard App</h1>
+    <div id="upload-container">
+        <input type="file" id="fileInput" accept=".txt">
+        <p>Upload a text file with flashcards (format: Question: Answer per line)</p>
+    </div>
+    <div id="flashcards-container">
+        <div class="flashcard">
+            <div class="question"></div>
+            <input type="text" id="userAnswer" placeholder="Type your answer here">
+            <button id="checkAnswerButton">Check Answer</button>
+            <div class="answer"></div>
+        </div>
+        <div id="controls">
+            <button id="prevButton">Previous</button>
+            <button id="nextButton">Next</button>
+        </div>
+    </div>
 
-    <!-- Include PDF.js library -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <script>
-        const dropArea = document.getElementById('dropArea');
-        const flashcardsContainer = document.getElementById('flashcards');
         let flashcards = [];
         let currentIndex = 0;
 
-        // Handle drag events
-        dropArea.addEventListener('dragover', (event) => {
-            event.preventDefault();
-            dropArea.classList.add('highlight');
-        });
+        document.getElementById('fileInput').addEventListener('change', handleFileSelect);
 
-        dropArea.addEventListener('dragleave', () => {
-            dropArea.classList.remove('highlight');
-        });
-
-        dropArea.addEventListener('drop', (event) => {
-            event.preventDefault();
-            dropArea.classList.remove('highlight');
-            const file = event.dataTransfer.files[0];
-            if (file && file.type === 'application/pdf') {
-                handleFile(file);
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file && file.type === 'text/plain') {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const text = e.target.result;
+                    parseFlashcards(text);
+                };
+                reader.readAsText(file);
             } else {
-                alert('Please drop a PDF file.');
+                alert('Please upload a text file.');
             }
-        });
-
-        // Handle click event to trigger file input
-        dropArea.addEventListener('click', () => {
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = '.pdf';
-            input.style.display = 'none';
-            document.body.appendChild(input);
-            input.addEventListener('change', () => {
-                const file = input.files[0];
-                if (file && file.type === 'application/pdf') {
-                    handleFile(file);
-                } else {
-                    alert('Please upload a PDF file.');
-                }
-            });
-            input.click();
-        });
-
-        function handleFile(file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const arrayBuffer = e.target.result;
-                extractTextFromPDF(arrayBuffer);
-            };
-            reader.readAsArrayBuffer(file);
         }
 
-        async function extractTextFromPDF(arrayBuffer) {
-            const pdf = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
-            const numPages = pdf.numPages;
-            let textContent = '';
-
-            for (let pageNum = 1; pageNum <= numPages; pageNum++) {
-                const page = await pdf.getPage(pageNum);
-                const text = await page.getTextContent();
-                textContent += text.items.map(item => item.str).join(' ') + '\n';
-            }
-
-            generateFlashcards(textContent);
-        }
-
-        function generateFlashcards(text) {
+        function parseFlashcards(text) {
             const lines = text.split('\n').filter(line => line.trim() !== '');
-            flashcards = [];
-            lines.forEach(line => {
-                const [question, answer] = line.split(':'); // Assuming format is "Question: Answer"
-                if (question && answer) {
-                    flashcards.push({ question: question.trim(), answer: answer.trim() });
-                }
+            flashcards = lines.map(line => {
+                const [question, answer] = line.split(':');
+                return { question: question.trim(), answer: answer.trim() };
             });
-
-            currentIndex = 0; // Reset index
+            currentIndex = 0;
             displayFlashcard();
+            document.getElementById('flashcards-container').style.display = 'block';
         }
 
         function displayFlashcard() {
             if (flashcards.length === 0) {
-                flashcardsContainer.innerHTML = '<p>No flashcards to display.</p>';
+                document.querySelector('.flashcard').innerHTML = '<p>No flashcards available.</p>';
                 return;
             }
 
-            flashcardsContainer.innerHTML = `
-                <div class="card">
-                    <div class="question">${flashcards[currentIndex].question}</div>
-                    <input type="text" id="userAnswer" placeholder="Type your answer here">
-                    <button id="checkAnswerButton">Check Answer</button>
-                    <div class="answer">${flashcards[currentIndex].answer}</div>
-                </div>
-                <button id="nextButton" style="display: none;">Next</button>
-            `;
-
-            flashcardsContainer.style.display = 'block';
-
-            document.getElementById('checkAnswerButton').addEventListener('click', checkAnswer);
-            document.getElementById('nextButton').addEventListener('click', nextFlashcard);
+            const flashcard = flashcards[currentIndex];
+            document.querySelector('.flashcard .question').textContent = flashcard.question;
+            document.querySelector('.flashcard .answer').textContent = flashcard.answer;
+            document.getElementById('userAnswer').value = '';
+            document.querySelector('.flashcard').classList.remove('show-answer');
+            document.getElementById('nextButton').style.display = 'none';
         }
 
-        function checkAnswer() {
+        document.getElementById('checkAnswerButton').addEventListener('click', function() {
             const userAnswer = document.getElementById('userAnswer').value.trim();
             const correctAnswer = flashcards[currentIndex].answer.trim();
-
+            
             if (userAnswer.toLowerCase() === correctAnswer.toLowerCase()) {
-                document.querySelector('.card').classList.add('show-answer');
-                document.getElementById('nextButton').style.display = 'block';
+                document.querySelector('.flashcard').classList.add('show-answer');
+                document.getElementById('nextButton').style.display = 'inline-block';
             } else {
                 alert('Incorrect answer. Please try again.');
             }
-        }
+        });
 
-        function nextFlashcard() {
+        document.getElementById('nextButton').addEventListener('click', function() {
             currentIndex = (currentIndex + 1) % flashcards.length;
             displayFlashcard();
-        }
+        });
+
+        document.getElementById('prevButton').addEventListener('click', function() {
+            currentIndex = (currentIndex - 1 + flashcards.length) % flashcards.length;
+            displayFlashcard();
+        });
     </script>
 </body>
 </html>
