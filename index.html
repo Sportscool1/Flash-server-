@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flashcard Generator</title>
+    <title>Flashcard Generator from PDF</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -33,25 +33,41 @@
     </style>
 </head>
 <body>
-    <h1>Flashcard Generator</h1>
-    <input type="file" id="fileInput" accept=".csv">
+    <h1>Flashcard Generator from PDF</h1>
+    <input type="file" id="fileInput" accept=".pdf">
     <div id="flashcards"></div>
 
+    <!-- Include PDF.js library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <script>
         document.getElementById('fileInput').addEventListener('change', handleFileSelect);
 
         function handleFileSelect(event) {
             const file = event.target.files[0];
-            if (file && file.type === 'text/csv') {
+            if (file && file.type === 'application/pdf') {
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    const text = e.target.result;
-                    generateFlashcards(text);
+                    const arrayBuffer = e.target.result;
+                    extractTextFromPDF(arrayBuffer);
                 };
-                reader.readAsText(file);
+                reader.readAsArrayBuffer(file);
             } else {
-                alert('Please upload a CSV file.');
+                alert('Please upload a PDF file.');
             }
+        }
+
+        async function extractTextFromPDF(arrayBuffer) {
+            const pdf = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
+            const numPages = pdf.numPages;
+            let textContent = '';
+
+            for (let pageNum = 1; pageNum <= numPages; pageNum++) {
+                const page = await pdf.getPage(pageNum);
+                const text = await page.getTextContent();
+                textContent += text.items.map(item => item.str).join(' ') + '\n';
+            }
+
+            generateFlashcards(textContent);
         }
 
         function generateFlashcards(text) {
@@ -59,7 +75,7 @@
             const flashcardsContainer = document.getElementById('flashcards');
             flashcardsContainer.innerHTML = '';
             lines.forEach(line => {
-                const [question, answer] = line.split(',');
+                const [question, answer] = line.split(':'); // Assuming format is "Question: Answer"
                 if (question && answer) {
                     const card = document.createElement('div');
                     card.className = 'card';
