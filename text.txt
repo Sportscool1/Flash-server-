@@ -1,2 +1,1 @@
-Windows Ctrl+Alt+del+taskmanager+end 
-Chrome OS Search+esc+end 
+
