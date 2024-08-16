@@ -1,2 +1,2 @@
-what is 1 +1 
-2 
+Windows Ctrl+Alt+del+taskmanager+end 
+Chrome OS Search+esc+end 
